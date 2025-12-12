@@ -1,0 +1,10 @@
+{
+	"id": "obsidian-ai-digest",
+	"name": "Obsidian AI Digest",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Automatically summarize clippings and generate daily narrative digests.",
+	"author": "Antigravity",
+	"authorUrl": "https://github.com/obsidian-ai-digest",
+	"isDesktopOnly": false
+}
