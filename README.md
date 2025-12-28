@@ -1,4 +1,4 @@
-# Obsidian AI Digest 플러그인 (한글)
+# AI Digest 플러그인 (한글)
 
 AI를 통해 일일 노트와 스크랩을 자동 요약하고, 지식 그래프와 내러티브로 연결하여 제공하는 Obsidian 플러그인입니다.
 

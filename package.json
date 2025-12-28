@@ -1,6 +1,6 @@
 {
-    "name": "obsidian-ai-digest",
-    "version": "1.1.0",
+    "name": "ai-digest",
+    "version": "1.1.1",
     "description": "Obsidian AI Digest Plugin",
     "main": "main.js",
     "scripts": {
