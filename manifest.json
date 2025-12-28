@@ -1,10 +1,10 @@
 {
 	"id": "obsidian-ai-digest",
 	"name": "Obsidian AI Digest",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"minAppVersion": "0.15.0",
-	"description": "Automatically summarize clippings and generate daily narrative digests.",
-	"author": "Antigravity",
-	"authorUrl": "https://github.com/obsidian-ai-digest",
+	"description": "Generate daily insight digests from your notes with AI. Features: Source Summaries, Knowledge Map (Mermaid), and Serendipitous Connections.",
+	"author": "dataofmen",
+	"authorUrl": "https://github.com/dataofmen/obsidian-ai-digest",
 	"isDesktopOnly": false
 }

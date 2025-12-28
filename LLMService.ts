@@ -58,14 +58,20 @@ export class LLMService {
 
             const response = await requestUrl(req);
 
+            if (response.status === 401) {
+                throw new Error('Authentication failed (401). Please check your API Key in settings.');
+            }
             if (response.status !== 200) {
-                throw new Error(`OpenAI API Error: ${response.status}`);
+                throw new Error(`OpenAI API Error: ${response.status} - ${response.text}`);
             }
 
             const data = response.json;
             return data.choices[0].message.content;
         } catch (error) {
             console.error('OpenAI Request Failed:', error);
+            if (error.status === 401) {
+                throw new Error('Authentication failed (401). Please check your API Key in settings.');
+            }
             throw error;
         }
     }
@@ -98,14 +104,30 @@ export class LLMService {
 
             const response = await requestUrl(req);
 
+            if (response.status === 401) {
+                throw new Error('Authentication failed (401). Please check your API Key in settings.');
+            }
             if (response.status !== 200) {
-                throw new Error(`Anthropic API Error: ${response.status}`);
+                throw new Error(`Anthropic API Error: ${response.status} - ${response.text}`);
             }
 
             const data = response.json;
             return data.content[0].text;
         } catch (error) {
             console.error('Anthropic Request Failed:', error);
+            if (error.status === 401) {
+                throw new Error('Authentication failed (401). Please check your API Key in settings.');
+            }
+            throw error;
+        }
+    }
+
+    async testConnection(): Promise<boolean> {
+        try {
+            await this.complete('Test', 'Reply with "OK"');
+            return true;
+        } catch (error) {
+            console.error('Connection Test Failed:', error);
             throw error;
         }
     }

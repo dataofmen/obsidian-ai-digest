@@ -1,6 +1,7 @@
-import { App, Plugin, PluginSettingTab, Setting, TFile, Notice, debounce } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, TFile, Notice, debounce, TFolder } from 'obsidian';
 import { LLMService, LLMConfig } from './LLMService';
 import { DigestGenerator } from './DigestGenerator';
+import { DateSelectionModal } from './DateSelectionModal';
 
 interface ObsidianAIDigestSettings {
     apiKey: string;
@@ -39,6 +40,7 @@ export default class ObsidianAIDigest extends Plugin {
         this.digestGenerator = new DigestGenerator(
             this.app,
             this.llmService,
+            this.settings.targetFolder,
             this.settings.digestFolder,
             this.settings.language
         );
@@ -46,12 +48,20 @@ export default class ObsidianAIDigest extends Plugin {
         // Add Settings Tab
         this.addSettingTab(new ObsidianAIDigestSettingTab(this.app, this));
 
+
+
+        // ... (existing imports)
+
+        // ... inside ObsidianAIDigest class ...
+
         // Add Command - Manual Trigger for Digest
         this.addCommand({
-            id: 'generate-daily-digest',
-            name: 'Generate Daily Digest (Yesterday)',
-            callback: async () => {
-                await this.digestGenerator.generateDigest();
+            id: 'generate-daily-digest-date',
+            name: 'Generate Daily Digest (Select Date)',
+            callback: () => {
+                new DateSelectionModal(this.app, this.settings.targetFolder, async (date) => {
+                    await this.digestGenerator.generateDigest(date);
+                }).open();
             }
         });
 
@@ -106,6 +116,7 @@ export default class ObsidianAIDigest extends Plugin {
         }
         // Update Digest Generator config
         if (this.digestGenerator) {
+            this.digestGenerator.targetFolder = this.settings.targetFolder;
             this.digestGenerator.digestFolder = this.settings.digestFolder;
             this.digestGenerator.language = this.settings.language;
         }
@@ -196,6 +207,26 @@ class ObsidianAIDigestSettingTab extends PluginSettingTab {
                 }));
 
         new Setting(containerEl)
+            .setName('Test API Connection')
+            .setDesc('Check if your API key works')
+            .addButton(button => button
+                .setButtonText('Test Connection')
+                .onClick(async () => {
+                    button.setButtonText('Testing...');
+                    button.setDisabled(true);
+                    try {
+                        await this.plugin.llmService.testConnection();
+                        new Notice('✅ Connection Successful!');
+                        button.setButtonText('Test Connection');
+                    } catch (error) {
+                        new Notice(`❌ Connection Failed: ${error.message}`);
+                        button.setButtonText('Test Failed');
+                    } finally {
+                        button.setDisabled(false);
+                    }
+                }));
+
+        new Setting(containerEl)
             .setName('AI Provider')
             .setDesc('Choose your AI provider')
             .addDropdown(dropdown => dropdown
@@ -230,26 +261,36 @@ class ObsidianAIDigestSettingTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 }));
 
+        const folders = this.app.vault.getAllLoadedFiles()
+            .filter(f => f instanceof TFolder)
+            .map(f => f.path)
+            .sort();
+
+        // Add root folder explicitly if needed, but TFolder usually covers it as '/' or empty string?
+        // getAllLoadedFiles usually returns root as well ('/').
+
         new Setting(containerEl)
             .setName('Target Folder')
-            .setDesc('Folder to watch for new clippings (Case sensitive!)')
-            .addText(text => text
-                .setPlaceholder('In Box')
-                .setValue(this.plugin.settings.targetFolder)
-                .onChange(async (value) => {
-                    this.plugin.settings.targetFolder = value;
-                    await this.plugin.saveSettings();
-                }));
+            .setDesc('Folder to watch for new clippings')
+            .addDropdown(dropdown => {
+                folders.forEach(folder => dropdown.addOption(folder, folder));
+                dropdown.setValue(this.plugin.settings.targetFolder)
+                    .onChange(async (value) => {
+                        this.plugin.settings.targetFolder = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
 
         new Setting(containerEl)
             .setName('Digest Folder')
             .setDesc('Folder to save Daily Digests')
-            .addText(text => text
-                .setPlaceholder('Daily Notes')
-                .setValue(this.plugin.settings.digestFolder)
-                .onChange(async (value) => {
-                    this.plugin.settings.digestFolder = value;
-                    await this.plugin.saveSettings();
-                }));
+            .addDropdown(dropdown => {
+                folders.forEach(folder => dropdown.addOption(folder, folder));
+                dropdown.setValue(this.plugin.settings.digestFolder)
+                    .onChange(async (value) => {
+                        this.plugin.settings.digestFolder = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
     }
 }
